@@ -1,19 +1,3 @@
-terraform {
-  required_providers {
-    incus = {
-      source = "lxc/incus"
-    }
-  }
-}
-
-provider "incus" {
-}
-
-variable "instance_names" {
-  type    = set(string)
-  default = ["server01", "server02", "server03", "server04", "server05"]
-}
-
 resource "incus_project" "project" {
   name        = "dev-incus-deploy"
   description = "Project used to test incus-deploy"
@@ -115,7 +99,7 @@ resource "incus_volume" "disk4" {
   pool         = "default"
   content_type = "block"
   config = {
-    "size" = "50GiB"
+    "size"            = "50GiB"
     "security.shared" = "true"
   }
 }
