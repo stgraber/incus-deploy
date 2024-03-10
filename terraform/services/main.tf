@@ -1,5 +1,5 @@
 resource "incus_project" "project" {
-  name        = "dev-incus-deploy-services"
+  name        = var.project_name
   description = "Project used to test incus-deploy services"
   config = {
     "features.images"          = false
@@ -27,7 +27,7 @@ resource "incus_profile" "profile" {
     name = "root"
 
     properties = {
-      "pool" = "default"
+      "pool" = var.storage_pool
       "path" = "/"
     }
   }
@@ -49,6 +49,10 @@ resource "incus_instance" "instances" {
   project  = incus_project.project.name
   name     = each.value
   type     = "container"
-  image    = "images:ubuntu/22.04"
+  image    = var.image
   profiles = ["default", incus_profile.profile.name]
+
+  lifecycle {
+    ignore_changes = [ running ]
+  }
 }
