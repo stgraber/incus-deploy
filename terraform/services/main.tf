@@ -1,21 +1,5 @@
-terraform {
-  required_providers {
-    incus = {
-      source = "lxc/incus"
-    }
-  }
-}
-
-provider "incus" {
-}
-
-variable "instance_names" {
-  type    = set(string)
-  default = ["ceph-mds01", "ceph-mds02", "ceph-mds03", "ceph-mgr01", "ceph-mgr02", "ceph-mgr03", "ceph-rgw01", "ceph-rgw02", "ceph-rgw03"]
-}
-
-resource "incus_project" "project" {
-  name        = "dev-incus-deploy-services"
+resource "incus_project" "this" {
+  name        = "services"
   description = "Project used to test incus-deploy services"
   config = {
     "features.images"          = false
@@ -27,14 +11,14 @@ resource "incus_project" "project" {
   }
 }
 
-resource "incus_profile" "profile" {
-  project     = incus_project.project.name
+resource "incus_profile" "this" {
+  project     = incus_project.this.name
   name        = "services"
   description = "Profile to be used by the service containers"
 
   config = {
-    "limits.cpu"    = 1
-    "limits.memory" = "1GiB"
+    "limits.cpu"       = "1"
+    "limits.memory"    = "1GiB"
     "limits.processes" = "1000"
   }
 
@@ -43,7 +27,7 @@ resource "incus_profile" "profile" {
     name = "root"
 
     properties = {
-      "pool" = "default"
+      "pool" = var.storage_pool
       "path" = "/"
     }
   }
@@ -62,9 +46,13 @@ resource "incus_profile" "profile" {
 resource "incus_instance" "instances" {
   for_each = var.instance_names
 
-  project  = incus_project.project.name
+  project  = incus_project.this.name
   name     = each.value
   type     = "container"
-  image    = "images:ubuntu/22.04"
-  profiles = ["default", incus_profile.profile.name]
+  image    = var.image
+  profiles = ["default", incus_profile.this.name]
+
+  lifecycle {
+    ignore_changes = [ running ]
+  }
 }
